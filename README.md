@@ -16,6 +16,12 @@ v1.0
 ```
 Tool to visualize storage layout of a state variables in solidity contracts
 
+## Pre-requisite
+* Install all the modules from `requirements.txt` using `pip3 install -r requirements.txt`
+* Select solc version that smart contract need using below commands:
+  1. Install solc version using `solc-select install <solc-version>`
+  2. Use solc version installed using `solc-select use <solc-version>`
+
 ## Usage
 ```
 $ visualize.py [-h] [-f FILES [FILES ...]] [-mcn MAIN_CONTRACTS [MAIN_CONTRACTS ...]]
