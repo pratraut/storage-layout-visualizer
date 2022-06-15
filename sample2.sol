@@ -1,16 +1,30 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.4.0 <0.9.0;
 
-contract D {
-    bytes32 private constant _IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-    uint256 ba;
-    mapping(uint => mapping(uint => address)) bdata;
-    bool bbool;
-    uint128 bu;
-}
+contract ProxyClash {
+    address public otherContractAddress;
 
-contract E is D {
-    struct S { uint16 a; uint16 b; uint256 c; }
-    uint x;
-    mapping(uint => mapping(uint => S)) data;
+    constructor(address _otherContract) {
+        otherContractAddress = _otherContract;
+    }
+
+    function setOtherAddress(address _otherContract) public {
+        otherContractAddress = _otherContract;
+    }
+
+  fallback() external {
+    address _impl = otherContractAddress;
+
+    assembly {
+      let ptr := mload(0x40)
+      calldatacopy(ptr, 0, calldatasize())
+      let result := delegatecall(gas(), _impl, ptr, calldatasize(), 0, 0)
+      let size := returndatasize()
+      returndatacopy(ptr, 0, size)
+
+      switch result
+      case 0 { revert(ptr, size) }
+      default { return(ptr, size) }
+    }
+  }
 }

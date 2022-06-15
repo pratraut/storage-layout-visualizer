@@ -2,3 +2,5 @@ venv/
 tmp/
 .DS_Store
 out.json
+.tmp/
+*.bak

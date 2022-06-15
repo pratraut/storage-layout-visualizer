@@ -1,4 +1,4 @@
-import os, json, argparse, platform
+import os, json, argparse, platform, re
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
@@ -101,7 +101,10 @@ def displayLayout(layouts, mainContractNames=[]):
             
                 console.print(table)
     else:
-        console.print("Combined layout view of", ",".join(mainContractNames))
+        text = Text()
+        text.append("Combined layout view of ")
+        text.append(",".join(mainContractNames), style="bold underline green")
+        console.print(text)
         table = Table(show_header=True, header_style="bold magenta")
 
         for col in ["Contract", "Variable", "Slot", "Offset", "Type"]:
@@ -116,9 +119,59 @@ def displayLayout(layouts, mainContractNames=[]):
         
         console.print(table)
 
+def processFile(file_paths):
+    unique_path = []
+    all_files = []
+    for file_path in file_paths:
+        dir_path = os.path.dirname(file_path)
+        if not dir_path:
+            dir_path = '.'
+            # print("Dir path =", dir_path)
+        is_present = any([dir_path in u_path for u_path in unique_path])
+        if not is_present:
+            unique_path.append(dir_path)
+            files = [os.path.join(dp, f) for dp, dn, filenames in os.walk(dir_path) for f in filenames if os.path.splitext(f)[1] == '.sol']
+            for u_file in files:
+                if u_file not in all_files:
+                    all_files.append(u_file)
+    # files = ['./test.sol']
+    # print(unique_path)
+    # print(all_files)
+
+    # exit(0)
+
+    for file in all_files:
+        # print("File =", file)
+        # dir_path = os.path.dirname(file)
+        # print("Dir path =", dir_path)
+        dir_path = os.path.abspath(os.path.dirname(file))
+        # print("Dir path =", dir_path)
+        data = None
+        with open(file, "rt") as file_handle:
+            data = file_handle.read()
+
+        with open(file + ".bak", "wt") as file_handle:
+            file_handle.write(data)
+
+        if data:
+            data = re.sub(r"pragma solidity .*", "pragma solidity >=0.4.0 <0.9.0;", data)
+            all_imports = re.findall(r"import .*", data)
+            # filtered_imports = []
+            for imp in all_imports:
+                import_path = re.search("import [\'\"](.*)[\'\"];", imp)
+                import_file = os.path.basename(import_path.group(1))
+                # print(import_file)
+                filtered_import = f"import '{dir_path}/{import_file}';"
+                # print(filtered_import)
+                data = re.sub(imp, filtered_import, data)
+
+            with open(file, "wt") as file_handle:
+                file_handle.write(data)
+
 contractLayout = []
 
-for sol_file in parser.get("files"):
+processFile(parser.get("files"))
+for sol_file in parser.get("files"):    
     os.system(COMPILE_CMD % sol_file)
     if os.path.exists(OUTPUT_PATH):
         with open(OUTPUT_PATH, "r") as file:
