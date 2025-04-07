@@ -158,7 +158,9 @@ def processFile(file_paths):
             all_imports = re.findall(r"import .*", data)
             # filtered_imports = []
             for imp in all_imports:
-                import_path = re.search("import [\'\"](.*)[\'\"];", imp)
+                # print(imp)
+                import_path = re.search("import.*[\'\"](.*)[\'\"];", imp)
+                # print("import path =", import_path.group())
                 import_file = os.path.basename(import_path.group(1))
                 # print(import_file)
                 filtered_import = f"import '{dir_path}/{import_file}';"
@@ -177,7 +179,7 @@ for sol_file in parser.get("files"):
         with open(OUTPUT_PATH, "r") as file:
             layout = []
             json_data = json.loads(file.read())
-            # print(json_data)
+            print(json_data)
             contracts = json_data['contracts']
             for contract in contracts:
                 # print("contract =", contract)
